@@ -1,26 +1,23 @@
-This Bash script systematically checks all possible .dk domains consisting of 1, 2, or 3 letters or numbers (a–z, 0–9) to see if they are available.
-<br>
-It uses the whois command to query each generated domain name and looks for the phrase “No entries found,” which indicates that the domain is free.<br>
-<ul>
-<li>If a domain is available, it’s written to free_domains.txt.</li>
-<li>If a domain is already taken, it’s written to taken_domains.txt.</li>
-</ul>
-<br>
-The script goes through all combinations:
-<ul>
-<li>Single-character domains (e.g., a.dk, 7.dk)</li>
-<li>Two-character domains (e.g., ab.dk, x3.dk)</li>
-<li>Three-character domains (e.g., cat.dk, z9r.dk)</li>
-</ul><br>
-When it finishes, it displays a summary message and stores the categorized results in the two output files.
-<br><br>
+🧩 Description
 
-Put the file somwhere.<br>
-Run chmod +x filename.sh on it.<br>
-Run it using a terminal.<br>
-It'll start from the beginning and work its way through. <br>
-It'll make 2 files one with:<br>
-taken_domains.txt (so you can see it works)<br>
-free_domains.txt (that's the one with the gold).<br>
+This Bash script automatically checks whether .dk domains (or any other top-level domain) are available or taken, based on combinations of letters and numbers.
+It queries the official Punktum.dk WHOIS server directly, ensuring accurate results for Danish domains.
 
-Change the settings so it works for what you are looking for. 
+The script supports:
+	•	✅ Custom domain endings (e.g., .dk, .com, .net)
+	•	✅ Adjustable rate limit (SLEEP_TIME) to stay within WHOIS query limits (e.g., 1 request per second)
+	•	✅ Configurable minimum and maximum domain length (MIN_LENGTH and MAX_LENGTH)
+	•	✅ Letters and digits (a–z, 0–9) for generating combinations
+	•	✅ Automatic recursive domain generation (no manual nested loops)
+	•	✅ Separate result files for free and taken domains
+	•	✅ Progress output while running
+
+Each domain is checked via the WHOIS server.
+If the output includes the line "No entries found for the selected source.", the domain is considered free, otherwise taken.
+
+⸻
+
+⚙️ How It Works
+	1.	The script defines a set of valid characters: all lowercase letters (a–z) and numbers (0–9).
+	2.	It then generates every possible combination of these characters within the defined MIN_LENGTH and MAX_LENGTH range.
+	3.	For each generated domain, it performs a WHOIS lookup via:
