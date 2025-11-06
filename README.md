@@ -51,6 +51,11 @@ MAX_LENGTH=3            # Maximum length of domain names
   <code>MIN_LENGTH=4</code><br>
   <code>MAX_LENGTH=5</code></li>
 </ul>
+<h3>Errors?</h3>
+<p>if it dosen't work:</p>
+<ul>
+<li>Try to change sleeptime</li>
+<li>add a new "Domain not found" line to the script. Check a domain that is not taken with "whois longdomainthatnoonewants.yourending" and see how it says: Domain not found, add this to the list of "Domain not found"-types</li>
 
 <h2>How to Run</h2>
 <ol>
