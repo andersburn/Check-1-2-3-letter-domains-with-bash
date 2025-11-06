@@ -1,10 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>Domain Availability Checker – Description & Guide</title>
-</head>
-<body>
+
 
 <h1>Domain Availability Checker Script</h1>
 
@@ -86,5 +80,3 @@ MAX_LENGTH=3            # Maximum length of domain names
   <li>Scanning large ranges (e.g., 3–5 characters) can take a very long time.</li>
 </ul>
 
-</body>
-</html>
