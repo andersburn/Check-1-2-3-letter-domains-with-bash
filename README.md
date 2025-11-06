@@ -1,147 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Domain Availability Checker – Description & Guide</title>
+</head>
+<body>
 
+<h1>Domain Availability Checker Script</h1>
 
-  <h1>.dk Domain Checker Script</h1>
-  <p >Checks availability of domains composed of letters and numbers within a chosen length range, querying Punktum.dk WHOIS with rate limiting.</p>
-  <div>
-	<span >Configurable TLD</span>
-	<span >Rate limit</span>
-	<span >Min/Max length</span>
-	<span >a–z, 0–9</span>
-	<span >Free/Taken outputs</span>
-  </div>
+<p>This Bash script checks whether domains are available or taken by using the <code>whois</code> command. It works with any domain ending such as <b>.net</b>, <b>.ai</b>, <b>.io</b>, <b>.com</b>, <b>.dk</b>, and others. The script generates combinations of letters and numbers within a configurable length range and queries WHOIS servers directly to find out if the domains exist.</p>
 
-<section>
-  <h2>Description</h2>
-  <p>This Bash script generates combinations of lowercase letters and digits and checks whether corresponding domains are available under a chosen top-level domain, defaulting to <b>.dk</b>. It queries the official Punktum.dk WHOIS server and classifies each domain as free or taken, writing results to separate files. It respects the recommended rate limit by pausing between lookups.</p>
-</section>
+<h2>Features</h2>
+<ul>
+  <li>Works with any top-level domain (e.g. .net, .ai, .io, .com, .dk).</li>
+  <li>Customizable minimum and maximum length for domain names.</li>
+  <li>Adjustable delay between lookups (<code>SLEEP_TIME</code>).</li>
+  <li>Uses lowercase letters (a–z) and digits (0–9) for combinations.</li>
+  <li>Automatically saves available and taken domains to separate files.</li>
+  <li>Uses recursive generation to handle any length range without editing loops.</li>
+</ul>
 
-<section>
-  <h2>Features</h2>
-  <ul>
-	<li>Custom <b>domain ending</b> (e.g., .dk, .com, .net).</li>
-	<li>Configurable <b>rate limit</b> via sleep duration between WHOIS queries.</li>
-	<li><b>MIN_LENGTH</b> and <b>MAX_LENGTH</b> define the length range to scan.</li>
-	<li>Character set includes <b>a–z</b> and <b>0–9</b>.</li>
-	<li>Recursive generator produces combinations without manual nested loops.</li>
-	<li>Writes <b>free</b> and <b>taken</b> domains to separate, length-annotated files.</li>
-	<li>Progress messages while scanning different lengths.</li>
-  </ul>
-</section>
+<h2>How It Works</h2>
+<ol>
+  <li>The script builds all possible combinations of letters and numbers within the chosen range.</li>
+  <li>Each domain is checked with a WHOIS query, for example:
+    <pre><code>whois example.net</code></pre>
+  </li>
+  <li>If the WHOIS result contains text such as <code>No match for</code> or <code>No entries found</code>, it is considered free. Otherwise, it is marked as taken.</li>
+  <li>Free domains are saved in <code>free_domains_[MIN]-[MAX]char.txt</code> and taken ones in <code>taken_domains_[MIN]-[MAX]char.txt</code>.</li>
+  <li>The script pauses between requests to respect WHOIS rate limits.</li>
+</ol>
 
-<section>
-  <h2>How It Works</h2>
-  <ol>
-	<li>Builds all candidate labels using lowercase letters and digits within the configured length range.</li>
-	<li>For each label, performs WHOIS against the Danish registry server:
-	  <pre><code>whois -h whois.punktum.dk example.dk</code></pre>
-	</li>
-	<li>If the response contains <code>No entries found for the selected source.</code>, the domain is treated as free; otherwise taken.</li>
-	<li>Results are appended to two files for later review.</li>
-	<li>A sleep interval enforces one request per second by default.</li>
-  </ol>
-</section>
+<h2>Configuration</h2>
+<p>You can edit the first lines of the script to adjust its behavior:</p>
 
-<section>
-  <h2>Configuration</h2>
-  <table>
-	<thead>
-	  <tr><th>Variable</th><th>Purpose</th><th>Example</th></tr>
-	</thead>
-	<tbody>
-	  <tr><td><code>DOMAIN_ENDING</code></td><td>TLD suffix to check</td><td><code>.dk</code></td></tr>
-	  <tr><td><code>SLEEP_TIME</code></td><td>Seconds to wait between WHOIS queries</td><td><code>1</code></td></tr>
-	  <tr><td><code>MIN_LENGTH</code></td><td>Shortest label length to include</td><td><code>1</code></td></tr>
-	  <tr><td><code>MAX_LENGTH</code></td><td>Longest label length to include</td><td><code>3</code></td></tr>
-	</tbody>
-  </table>
+<pre><code>DOMAIN_ENDING=".net"    # Domain ending (.net, .ai, .io, .com, etc.)
+SLEEP_TIME=1            # Seconds to wait between WHOIS lookups
+MIN_LENGTH=1            # Minimum length of domain names
+MAX_LENGTH=3            # Maximum length of domain names
+</code></pre>
 
-  <div >
-	<div>
-	  <h3>Default: 1–3 char .dk at 1 req/s</h3>
-	  <pre><code>DOMAIN_ENDING=".dk"
-SLEEP_TIME=1
-MIN_LENGTH=1
-MAX_LENGTH=3</code></pre>
-	</div>
-	<div>
-	  <h3>Only 2-char .dk</h3>
-	  <pre><code>DOMAIN_ENDING=".dk"
-SLEEP_TIME=1
-MIN_LENGTH=2
-MAX_LENGTH=2</code></pre>
-	</div>
-  </div>
-</section>
+<p>Example configurations:</p>
 
-<section>
-  <h2>Script</h2>
-  <pre><code>#!/bin/bash
-DOMAIN_ENDING=".dk"
-SLEEP_TIME=1
-MIN_LENGTH=1
-MAX_LENGTH=3
-letters=({a..z} {0..9})
-output_free="free_domains_${MIN_LENGTH}-${MAX_LENGTH}char.txt"
-output_taken="taken_domains_${MIN_LENGTH}-${MAX_LENGTH}char.txt"
-&gt; "$output_free"
-&gt; "$output_taken"
-check_domain() {
-	domain="$1$DOMAIN_ENDING"
-	result=$(whois -h whois.punktum.dk "$domain" 2&gt;/dev/null)
-	if echo "$result" | grep -q "No entries found for the selected source."; then
-		echo "[FREE]  $domain"
-		echo "$domain" &gt;&gt; "$output_free"
-	else
-		echo "[TAKEN] $domain"
-		echo "$domain" &gt;&gt; "$output_taken"
-	fi
-	sleep "$SLEEP_TIME"
-}
-generate_domains() {
-	for ((len=MIN_LENGTH; len&lt;=MAX_LENGTH; len++)); do
-		echo "Checking ${len}-character domains..."
-		generate_combinations "" $len
-	done
-}
-generate_combinations() {
-	local prefix=$1
-	local remaining=$2
-	if (( remaining == 0 )); then
-		check_domain "$prefix"
-		return
-	fi
-	for ch in "${letters[@]}"; do
-		generate_combinations "$prefix$ch" $((remaining - 1))
-	done
-}
-generate_domains
-echo "Done. Free domains: $output_free, taken domains: $output_taken."</code></pre>
-</section>
+<ul>
+  <li><b>1–3 character .net domains:</b><br>
+  <code>DOMAIN_ENDING=".net"</code><br>
+  <code>MIN_LENGTH=1</code><br>
+  <code>MAX_LENGTH=3</code></li>
+  <li><b>Only 2-character .ai domains:</b><br>
+  <code>DOMAIN_ENDING=".ai"</code><br>
+  <code>MIN_LENGTH=2</code><br>
+  <code>MAX_LENGTH=2</code></li>
+  <li><b>4–5 character .com domains with 2 seconds delay:</b><br>
+  <code>DOMAIN_ENDING=".com"</code><br>
+  <code>SLEEP_TIME=2</code><br>
+  <code>MIN_LENGTH=4</code><br>
+  <code>MAX_LENGTH=5</code></li>
+</ul>
 
-<section>
-  <h2>How To Run</h2>
-  <ol>
-	<li>Create a file named <code>check_domains.sh</code> and paste the script content into it.</li>
-	<li>Make it executable:
-	  <pre><code>chmod +x check_domains.sh</code></pre>
-	</li>
-	<li>Run it:
-	  <pre><code>./check_domains.sh</code></pre>
-	</li>
-	<li>Watch the terminal for status lines and review the output files:
-	  <ul>
-		<li><code>free_domains_[MIN]-[MAX]char.txt</code></li>
-		<li><code>taken_domains_[MIN]-[MAX]char.txt</code></li>
-	  </ul>
-	</li>
-  </ol>
-</section>
+<h2>How to Run</h2>
+<ol>
+  <li>Copy the script into a file, for example <code>check_domains.sh</code>.</li>
+  <li>Make it executable:
+    <pre><code>chmod +x check_domains.sh</code></pre>
+  </li>
+  <li>Run it in your terminal:
+    <pre><code>./check_domains.sh</code></pre>
+  </li>
+  <li>Watch the output for lines like:
+    <pre><code>[FREE]  ab.net
+[TAKEN] ac.net</code></pre>
+  </li>
+  <li>When done, open the generated files to see results:
+    <ul>
+      <li><code>free_domains_[MIN]-[MAX]char.txt</code></li>
+      <li><code>taken_domains_[MIN]-[MAX]char.txt</code></li>
+    </ul>
+  </li>
+</ol>
 
-<section >
-  <h2>Notes</h2>
-  <ul>
-	<li>Punktum.dk recommends a maximum of one WHOIS request per second; keep <code>SLEEP_TIME=1</code>.</li>
-	<li>For quick tests, run only length 1 or 2 by narrowing the range.</li>
-	<li>The character set is lowercase a–z and digits 0–9. Adjust as needed before scanning.</li>
-  </ul>
-</section>
+<h2>Notes</h2>
+<ul>
+  <li>Different WHOIS servers return different messages for free domains. If needed, adjust the search phrase in the script to match the response for the chosen TLD.</li>
+  <li>To avoid being blocked, do not reduce the sleep time too much. 1 second per query is generally safe.</li>
+  <li>Scanning large ranges (e.g., 3–5 characters) can take a very long time.</li>
+</ul>
+
+</body>
+</html>
