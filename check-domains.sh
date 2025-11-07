@@ -3,10 +3,10 @@
 ######################################
 # CONFIGURATION
 ######################################
-DOMAIN_ENDING=".com"       # Domain extension (e.g., .dk)
-SLEEP_TIME=1              # Seconds to wait between WHOIS lookups
+DOMAIN_ENDING=".ai"       # Domain extension (e.g., .dk, .com, .net, .ai)
+SLEEP_TIME=0.1              # Seconds to wait between WHOIS lookups
 MIN_LENGTH=1              # Minimum domain length
-MAX_LENGTH=3              # Maximum domain length
+MAX_LENGTH=2              # Maximum domain length
 ######################################
 
 letters=({a..z} {0..9})
@@ -18,16 +18,22 @@ output_taken="taken_domains_${MIN_LENGTH}-${MAX_LENGTH}char.txt"
 
 check_domain() {
 	domain="$1$DOMAIN_ENDING"
+
+	# Check DNS first (A and MX)
+	if dig +short "$domain" A | grep -q . || dig +short "$domain" MX | grep -q .; then
+		echo "[TAKEN - DNS] $domain"
+		echo "$domain" >> "$output_taken"
+		return
+	fi
+
+	# If no DNS, fallback to WHOIS
 	result=$(whois "$domain" 2>/dev/null)
-	#	result=$(whois -h whois.punktum.dk "$domain" 2>/dev/null)
 
-
-    #if echo "$result" | grep -qiE "No entries found for the selected source|Domain not found|No match for domain|No match for|NOT FOUND"; then
-	if echo "$result" | grep -Eiq "No (entries|match)|Domain not found"; then
+	if echo "$result" | grep -qiE "No entries found for the selected source|Domain not found|No match for domain|No match for|NOT FOUND"; then
 		echo "[FREE]  $domain"
 		echo "$domain" >> "$output_free"
 	else
-		echo "[TAKEN] $domain"
+		echo "[TAKEN - WHOIS] $domain"
 		echo "$domain" >> "$output_taken"
 	fi
 
